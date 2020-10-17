@@ -66,6 +66,7 @@ SSL3_V = 0x0300
 TLS1_V = 0x0301
 TLS11_V = 0x0302
 TLS12_V = 0x0303
+TLS13_V = 0x0304  # Only in the supported_versions extension
 
 ssl3_versions_str = {
     SSL3_V: 'SSL3',
@@ -74,7 +75,7 @@ ssl3_versions_str = {
     TLS12_V: 'TLS 1.2'
 }
 
-SSL3_VERSION_BYTES = set((b'\x03\x00', b'\x03\x01', b'\x03\x02', b'\x03\x03'))
+SSL3_VERSION_BYTES = set((b'\x03\x00', b'\x03\x01', b'\x03\x02', b'\x03\x03', b'\x03\x04'))
 
 
 # Alert levels
@@ -155,13 +156,12 @@ alert_description_str = {
     TLS1_AD_UNKNOWN_PSK_IDENTITY: 'TLS1_AD_UNKNOWN_PSK_IDENTITY'
 }
 
-
 # struct format strings for parsing buffer lengths
 # don't forget, you have to pad a 3-byte value with \x00
 _SIZE_FORMATS = ['!B', '!H', '!I', '!I']
 
 
-def parse_variable_array(buf, lenbytes):
+def parse_variable_array(buf, lenbytes, itemsize=1):
     """
     Parse an array described using the 'Type name<x..y>' syntax from the spec
     Read a length at the start of buf, and returns that many bytes
@@ -175,9 +175,268 @@ def parse_variable_array(buf, lenbytes):
     # read off the length
     size = struct.unpack(size_format, padding + buf[:lenbytes])[0]
     # read the actual data
-    data = buf[lenbytes:lenbytes + size]
+    if itemsize==1:
+        data = buf[lenbytes:lenbytes + size]
+    elif itemsize==2:
+        data = struct.unpack("!%dH" % (size/itemsize), buf[lenbytes:lenbytes+size])
     # if len(data) != size: insufficient data
     return data, size + lenbytes
+
+# Extension types
+TLS1_EXT_SERVER_NAME = 0
+TLS1_EXT_MAX_FRAGMENT_LENGTH = 1
+TLS1_EXT_CLIENT_CERTIFICATE_URL = 2
+TLS1_EXT_TRUSTED_CA_KEYS = 3
+TLS1_EXT_TRUNCATED_HMAC = 4
+TLS1_EXT_STATUS_REQUEST = 5
+TLS1_EXT_USER_MAPPING = 6
+TLS1_EXT_CLIENT_AUTHZ = 7
+TLS1_EXT_SERVER_AUTHZ = 8
+TLS1_EXT_CERT_TYPE = 9
+TLS1_EXT_SUPPORTED_GROUPS = 10
+TLS1_EXT_EC_POINT_FORMATS = 11
+TLS1_EXT_SRP = 12
+TLS1_EXT_SIGNATURE_ALGORITHMS = 13
+TLS1_EXT_USE_SRTP = 14
+TLS1_EXT_HEARTBEAT = 15
+TLS1_EXT_APPLICATION_LAYER_PROTOCOL_NEGOTIATION = 16
+TLS1_EXT_ALPN = TLS1_EXT_APPLICATION_LAYER_PROTOCOL_NEGOTIATION
+TLS1_EXT_STATUS_REQUEST_V2 = 17
+TLS1_EXT_SIGNED_CERTIFICATE_TIMESTAMP = 18
+TLS1_EXT_CLIENT_CERTIFICATE_TYPE = 19
+TLS1_EXT_SERVER_CERTIFICATE_TYPE = 20
+TLS1_EXT_PADDING = 21
+TLS1_EXT_ENCRYPT_THEN_MAC = 22
+TLS1_EXT_EXTENDED_MASTER_SECRET = 23
+TLS1_EXT_TOKEN_BINDING = 24
+TLS1_EXT_CACHED_INFO = 25
+TLS1_EXT_TLS_LTS = 26
+TLS1_EXT_COMPRESS_CERTIFICATE = 27 #temporary
+TLS1_EXT_RECORD_SIZE_LIMIT = 28
+TLS1_EXT_PWD_PROTECT = 29
+TLS1_EXT_PWD_CLEAR = 30
+TLS1_EXT_PASSWORD_SALT = 31
+TLS1_EXT_TICKET_PINNING = 32
+# unassigned 33-34
+TLS1_EXT_SESSION_TICKET = 35
+# unassigned 36-40
+TLS1_EXT_PRE_SHARED_KEY = 41
+TLS1_EXT_EARLY_DATA = 42
+TLS1_EXT_SUPPORTED_VERSIONS = 43
+TLS1_EXT_COOKIE = 44
+TLS1_EXT_PSK_KEY_EXCHANGE_MODES = 45
+# unassigned 46
+TLS1_EXT_CERTIFICATE_AUTHORITIES = 47
+TLS1_EXT_OLD_FILTERS = 48
+TLS1_EXT_POST_HANDSHAKE_AUTH = 49
+TLS1_EXT_SIGNATURE_ALGORITHMS_CERT = 50
+TLS1_EXT_KEY_SHARE = 51
+TLS1_EXT_TRANSPARENCY_INFO = 52
+TLS1_EXT_CONNECTION_ID = 53 #temporary
+# unassigned 54
+TLS1_EXT_EXTERNAL_ID_HASH = 55
+TLS1_EXT_EXTERNAL_SESSION_ID = 56
+# unassigned 57-2569
+TLS1_EXT_GREASE_2570 = 2570
+# unassigned 2571-6681
+TLS1_EXT_GREASE_6682 = 6682
+# unassigned 6683-10793
+TLS1_EXT_GREASE_10794 = 10794
+# unassigned 10795-14905
+TLS1_EXT_GREASE_14906 = 14906
+# unassigned 14907-19017
+TLS1_EXT_GREASE_19018 = 19018
+# unassigned 19019-23129
+TLS1_EXT_GREASE_23130 = 23130
+# unassigned 23131-27241
+TLS1_EXT_GREASE_27242 = 27242
+# unassigned 27243-31353
+TLS1_EXT_GREASE_31354 = 31354
+# unassigned 31355-35465
+TLS1_EXT_GREASE_35466 = 35466
+# unassigned 35467-39577
+TLS1_EXT_GREASE_39578 = 39578
+# unassigned 39579-43689
+TLS1_EXT_GREASE_43690 = 43690
+# unassigned 43691-47801
+TLS1_EXT_GREASE_47802 = 47802
+# unassigned 47803-51913
+TLS1_EXT_GREASE_51914 = 51914
+# unassigned 51915-56025
+TLS1_EXT_GREASE_56026 = 56026
+# unassigned 56027-60137
+TLS1_EXT_GREASE_60138 = 60138
+# unassigned 60139-64249
+TLS1_EXT_GREASE_64250 = 64250
+# unassigned 64251-65279
+# reserved for private use 65280
+TLS1_EXT_RENEGOTIATION_INFO = 65281
+# reserved for private use 65282-65535
+
+tls_ext_description_string = {
+    TLS1_EXT_SERVER_NAME: "Server name",
+    TLS1_EXT_MAX_FRAGMENT_LENGTH: "Max fragment length",
+    TLS1_EXT_CLIENT_CERTIFICATE_URL: "Client cert URL",
+    TLS1_EXT_TRUSTED_CA_KEYS: "Trusted CA keys",
+    TLS1_EXT_TRUNCATED_HMAC: "Truncated HMAC",
+    TLS1_EXT_STATUS_REQUEST: "Status request",
+    TLS1_EXT_USER_MAPPING: "User mapping",
+    TLS1_EXT_CLIENT_AUTHZ: "Client authz",
+    TLS1_EXT_SERVER_AUTHZ: "Server authz",
+    TLS1_EXT_CERT_TYPE: "Certificate type",
+    TLS1_EXT_SUPPORTED_GROUPS: "Supported groups",
+    TLS1_EXT_EC_POINT_FORMATS: "EC point formats",
+    TLS1_EXT_SRP: "SRP",
+    TLS1_EXT_SIGNATURE_ALGORITHMS: "Signature algorithms",
+    TLS1_EXT_USE_SRTP: "Use SRTP",
+    TLS1_EXT_HEARTBEAT: "Heartbeat",
+    TLS1_EXT_APPLICATION_LAYER_PROTOCOL_NEGOTIATION: "ALPN",
+    TLS1_EXT_STATUS_REQUEST_V2: "Status request v2",
+    TLS1_EXT_SIGNED_CERTIFICATE_TIMESTAMP: "Signed certificate timestamp",
+    TLS1_EXT_CLIENT_CERTIFICATE_TYPE: "Client certificate type",
+    TLS1_EXT_SERVER_CERTIFICATE_TYPE: "Server certificate type",
+    TLS1_EXT_PADDING: "Padding",
+    TLS1_EXT_ENCRYPT_THEN_MAC: "Encrypt then MAC",
+    TLS1_EXT_EXTENDED_MASTER_SECRET: "Extended master secret",
+    TLS1_EXT_TOKEN_BINDING: "Token binding",
+    TLS1_EXT_CACHED_INFO: "Cached info",
+    TLS1_EXT_TLS_LTS: "TLS LTS",
+    TLS1_EXT_COMPRESS_CERTIFICATE: "Compress certificate",
+    TLS1_EXT_RECORD_SIZE_LIMIT: "Record size limit",
+    TLS1_EXT_PWD_PROTECT: "Pwd protect",
+    TLS1_EXT_PWD_CLEAR: "Pwd clear",
+    TLS1_EXT_PASSWORD_SALT: "Password salt",
+    TLS1_EXT_TICKET_PINNING: "Ticket pinning",
+    # unassigned 33-34
+    TLS1_EXT_SESSION_TICKET: "Session ticket",
+    # unassigned 36-40
+    TLS1_EXT_PRE_SHARED_KEY: "Pre-shared key",
+    TLS1_EXT_EARLY_DATA: "Early data",
+    TLS1_EXT_SUPPORTED_VERSIONS: "Supported versions",
+    TLS1_EXT_COOKIE: "Ext cookie",
+    TLS1_EXT_PSK_KEY_EXCHANGE_MODES: "PSK key exchange modes",
+    # unassigned 46
+    TLS1_EXT_CERTIFICATE_AUTHORITIES: "Certificate authorities",
+    TLS1_EXT_OLD_FILTERS: "Old filters",
+    TLS1_EXT_POST_HANDSHAKE_AUTH: "Post-handshake auth",
+    TLS1_EXT_SIGNATURE_ALGORITHMS_CERT: "Signature algorithms cert",
+    TLS1_EXT_KEY_SHARE: "Key share",
+    TLS1_EXT_TRANSPARENCY_INFO: "Transparency info",
+    TLS1_EXT_CONNECTION_ID: "Connection ID", #temporary
+    # unassigned 54
+    TLS1_EXT_EXTERNAL_ID_HASH: "External ID hash",
+    TLS1_EXT_EXTERNAL_SESSION_ID: "External session ID",
+    # unassigned 57-2569
+    TLS1_EXT_GREASE_2570: "Grease",
+    # unassigned 2571-6681
+    TLS1_EXT_GREASE_6682: "Grease",
+    # unassigned 6683-10793
+    TLS1_EXT_GREASE_10794: "Grease",
+    # unassigned 10795-14905
+    TLS1_EXT_GREASE_14906: "Grease",
+    # unassigned 14907-19017
+    TLS1_EXT_GREASE_19018: "Grease",
+    # unassigned 19019-23129
+    TLS1_EXT_GREASE_23130: "Grease",
+    # unassigned 23131-27241
+    TLS1_EXT_GREASE_27242: "Grease",
+    # unassigned 27243-31353
+    TLS1_EXT_GREASE_31354: "Grease",
+    # unassigned 31355-35465
+    TLS1_EXT_GREASE_35466: "Grease",
+    # unassigned 35467-39577
+    TLS1_EXT_GREASE_39578: "Grease",
+    # unassigned 39579-43689
+    TLS1_EXT_GREASE_43690: "Grease",
+    # unassigned 43691-47801
+    TLS1_EXT_GREASE_47802: "Grease",
+    # unassigned 47803-51913
+    TLS1_EXT_GREASE_51914: "Grease",
+    # unassigned 51915-56025
+    TLS1_EXT_GREASE_56026: "Grease",
+    # unassigned 56027-60137
+    TLS1_EXT_GREASE_60138: "Grease",
+    # unassigned 60139-64249
+    TLS1_EXT_GREASE_64250: "Grease",
+    # unassigned 64251-65279
+    # reserved for private use 65280
+    TLS1_EXT_RENEGOTIATION_INFO: "Renegotiation info",
+    # reserved for private use 65282-65535
+    
+}
+
+def tls_extension_name(ext_type):
+    """
+    Returns a text name associated with the give extension type value
+    """
+    try:
+        rv=tls_ext_description_string[ext_type];
+        if rv == "Grease":
+            rv = rv + " (%d)" % ext_type
+    except KeyError:
+        rv="Unassigned (%d)" % ext_type
+    return rv
+
+def parse_sni(buf):
+    sni_llength = struct.unpack('!H', buf[:2])[0]
+    sni_names = []
+    sni_length = 0
+
+    if sni_llength>0:
+        pointer=2
+        while pointer < sni_llength:
+            sni_type = struct.unpack('!B', buf[pointer:pointer+1])[0]
+            pointer += 1
+            sni_nlength = struct.unpack('!H', buf[pointer:pointer+2])[0]
+            pointer += 2
+            sni_name = struct.unpack("%ss"%sni_nlength, buf[pointer:pointer+sni_nlength])[0].decode("utf-8")
+            sni_names.append((sni_type, sni_name))
+            pointer += sni_nlength
+    return sni_names
+
+# Supported groups extension values
+TLS1_GROUP_ZERO = 0 #reserved
+TLS1_GROUP_SECT163K1 = 1
+TLS1_GROUP_SECT163R1 = 2
+TLS1_GROUP_SECT163R2 = 3
+TLS1_GROUP_SECT193R1 = 4
+TLS1_GROUP_SECT103R2 = 5
+#TODO
+
+# Signature schemes - TLS1.3+
+# RFC8446
+TLS1_SIGSCHEME_RSA_PKCS1_SHA1 = 0x0201
+TLS1_SIGSCHEME_ECDSA_SHA1 = 0x0203
+
+TLS1_SIGSCHEME_RSA_PKCS1_SHA256 = 0x0401
+TLS1_SIGSCHEME_RSA_PKCS1_SHA384 = 0x0501
+TLS1_SIGSCHEME_RSA_PKCS1_SHA512 = 0x0601
+
+TLS1_SIGSCHEME_ECDSA_SECP384R1_SHA256 = 0x0403
+TLS1_SIGSCHEME_ECDSA_SECP384R1_SHA384 = 0x0503
+TLS1_SIGSCHEME_ECDSA_SECP384R1_SHA512 = 0x0603
+
+TLS1_SIGSCHEME_RSA_PSS_RSAE_SHA256 = 0x0804
+TLS1_SIGSCHEME_RSA_PSS_RSAE_SHA384 = 0x0805
+TLS1_SIGSCHEME_RSA_PSS_RSAE_SHA512 = 0x0806
+TLS1_SIGSCHEME_ED25519 = 0x0807
+TLS1_SIGSCHEME_ED448 = 0x0808
+TLS1_SIGSCHEME_RSA_PSS_PSS_SHA256 = 0x0809
+TLS1_SIGSCHEME_RSA_PSS_PSS_SHA384 = 0x080A
+TLS1_SIGSCHEME_RSA_PSS_PSS_SHA512 = 0x080B
+
+# RFC-bruckert-brainpool
+TLS1_SIGSCHEME_ECDSA_BRAINPOOLP256R1TLS13_SHA256 = 0x081A
+TLS1_SIGSCHEME_ECDSA_BRAINPOOLP256R1TLS13_SHA384 = 0x081B
+TLS1_SIGSCHEME_ECDSA_BRAINPOOLP256R1TLS13_SHA512 = 0x081C
+
+# draft
+TLS1_SIGSCHEME_ECCSI_SHA256 = 0x0704
+TLS1_SIGSCHEME_ISO_IBS1 = 0x0705
+TLS1_SIGSCHEME_ISO_IBS2 = 0x0706
+TLS1_SIGSCHEME_ISO_CHINESE_IBS = 0x0707
+TLS1_SIGSCHEME_SM2SIG_SM3 = 0x0708
+
 
 
 def parse_extensions(buf):
@@ -197,7 +456,7 @@ def parse_extensions(buf):
         ext_data, parsed = parse_variable_array(buf[pointer:], 2)
         extensions.append((ext_type, ext_data))
         pointer += parsed
-    return extensions
+    return ( extensions_length, extensions )
 
 
 class SSL3Exception(Exception):
@@ -285,19 +544,21 @@ class TLSClientHello(dpkt.Packet):
         self.session_id, pointer = parse_variable_array(self.data, 1)
         # print 'pointer',pointer
         # handle ciphersuites
-        ciphersuites, parsed = parse_variable_array(self.data[pointer:], 2)
+        self.ciphersuites, parsed = parse_variable_array(self.data[pointer:], 2, 2)
         pointer += parsed
-        self.num_ciphersuites = len(ciphersuites) / 2
+        self.num_ciphersuites = len(self.ciphersuites)
         # check len(ciphersuites) % 2 == 0 ?
         # compression methods
         compression_methods, parsed = parse_variable_array(
             self.data[pointer:], 1)
         pointer += parsed
         self.num_compression_methods = parsed - 1
-        self.compression_methods = map(ord, compression_methods)
-        # Parse extensions if present
+        # self.compression_methods = map(ord, compression_methods)
+        # python 3:
+        self.compression_methods = compression_methods
+                # Parse extensions if present
         if len(self.data[pointer:]) >= 6:
-            self.extensions = parse_extensions(self.data[pointer:])
+            self.extension_length, self.extensions = parse_extensions(self.data[pointer:])
 
 
 class TLSServerHello(dpkt.Packet):
@@ -318,7 +579,7 @@ class TLSServerHello(dpkt.Packet):
             pointer += 1
             # Parse extensions if present
             if len(self.data[pointer:]) >= 6:
-                self.extensions = parse_extensions(self.data[pointer:])
+                self.extension_length, self.extensions = parse_extensions(self.data[pointer:])
         except struct.error:
             # probably data too short
             raise dpkt.NeedData
@@ -352,6 +613,55 @@ TLSCertificateVerify = TLSUnknownHandshake
 TLSClientKeyExchange = TLSUnknownHandshake
 TLSFinished = TLSUnknownHandshake
 
+# TLS Handshake type codes : https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-7
+TLS1_HS_HELLO_REQUEST = 0 # prior to TLS1.3 only
+TLS1_HS_CLIENT_HELLO = 1
+TLS1_HS_SERVER_HELLO = 2
+# Hello verify request - not used/reserved 3
+TLS1_HS_NEW_SESSION_TICKET = 4
+TLS1_HS_END_OF_EARLY_DATA = 5
+# Hello retry request - not used/reserved 6
+# Unassigned 7
+TLS1_HS_ENCRYPTED_EXTENSIONS = 8
+# Unassigned 9-10
+TLS1_HS_CERTIFICATE = 11
+TLS1_HS_SERVER_KEY_EXCHANGE = 12  # prior to TLS1.3 only
+TLS1_HS_CERTIFICATE_REQUEST = 13
+TLS1_HS_SERVER_HELLO_DONE = 14  # prior to TLS1.3 only
+TLS1_HS_CERTIFICATE_VERIFY = 15
+TLS1_HS_CLIENT_KEY_EXCHANGE = 16 # prior to TLS1.3 only
+# Unassigned 17-19
+TLS1_HS_FINISHED = 20
+TLS1_HS_CERTIFICATE_URL = 21 # prior to TLS1.3 only
+TLS1_HS_CERTIFICATE_STATUS = 22 # prior to TLS1.3 only
+TLS1_HS_SUPPLEMENTAL_DATA = 23 # prior to TLS1.3 only
+TLS1_HS_KEY_UPDATE = 24
+TLS1_HS_COMPRESSED_CERTIFICATE = 25 # temporary
+# Unassigned 26-253
+TLS1_HS_MESSAGE_HASH = 254
+# Unassigned 255
+
+tls_handshake_description_string = {
+    TLS1_HS_HELLO_REQUEST: "hello_request",
+    TLS1_HS_CLIENT_HELLO: "client_hello",
+    TLS1_HS_SERVER_HELLO: "server_hello",
+    TLS1_HS_NEW_SESSION_TICKET: "new_session_ticket",
+    TLS1_HS_END_OF_EARLY_DATA: "end_of_early_data",
+    TLS1_HS_ENCRYPTED_EXTENSIONS: "encrypted_extensions",
+    TLS1_HS_CERTIFICATE: "certificate",
+    TLS1_HS_SERVER_KEY_EXCHANGE: "server_key_exchange",
+    TLS1_HS_CERTIFICATE_REQUEST: "certificate_request",
+    TLS1_HS_SERVER_HELLO_DONE: "server_hello_done",
+    TLS1_HS_CERTIFICATE_VERIFY: "certificate_verify",
+    TLS1_HS_CLIENT_KEY_EXCHANGE: "client_key_exchange",
+    TLS1_HS_FINISHED: "finished",
+    TLS1_HS_CERTIFICATE_URL: "certificate_url",
+    TLS1_HS_CERTIFICATE_STATUS: "certificate_status",
+    TLS1_HS_SUPPLEMENTAL_DATA: "supplemental_data",
+    TLS1_HS_KEY_UPDATE: "key_update",
+    TLS1_HS_COMPRESSED_CERTIFICATE: "compressed_certificate",
+    TLS1_HS_MESSAGE_HASH: "message_hash"
+}
 
 # mapping of handshake type ids to their names
 # and the classes that implement them
@@ -408,12 +718,30 @@ class TLSHandshake(dpkt.Packet):
     def length(self):
         return struct.unpack('!I', b'\x00' + self.length_bytes)[0]
 
+# TLS Content Type/Record definitions https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-5
+# 0-19 unassigned
+TLS1_CT_CHANGE_CIPHER_SPEC = 20
+TLS1_CT_ALERT = 21
+TLS1_CT_HANDSHAKE = 22
+TLS1_CT_APPLICATION_DATA = 23
+TLS1_CT_HEARTBEAT = 24
+TLS1_CT_TLS12_CID = 25   # temporary
+# 26-255 unassigned
+
+tls_record_description_string= {
+    TLS1_CT_CHANGE_CIPHER_SPEC: "change_cipher_spec",
+    TLS1_CT_ALERT: "alert",
+    TLS1_CT_HANDSHAKE: "handshake",
+    TLS1_CT_APPLICATION_DATA: "application_data",
+    TLS1_CT_HEARTBEAT: "heartbeat",
+    TLS1_CT_TLS12_CID: "tls12_cid"
+}
 
 RECORD_TYPES = {
-    20: TLSChangeCipherSpec,
-    21: TLSAlert,
-    22: TLSHandshake,
-    23: TLSAppData,
+    TLS1_CT_CHANGE_CIPHER_SPEC: TLSChangeCipherSpec,
+    TLS1_CT_ALERT: TLSAlert,
+    TLS1_CT_HANDSHAKE: TLSHandshake,
+    TLS1_CT_APPLICATION_DATA: TLSAppData,
 }
 
 
@@ -694,3 +1022,4 @@ class TestTLSMultiFactory(object):
         assert (len(msgs) == 1)
         assert (n == 5)
 
+#rjb check

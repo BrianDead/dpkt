@@ -313,6 +313,31 @@ CIPHERSUITES = [
     CipherSuite(0x00c4, 'DHE ', 'RSA     ', 'CAMELLIA_256', 'CBC', 'SHA256'),
     CipherSuite(0x00c5, 'DH  ', 'anon    ', 'CAMELLIA_256', 'CBC', 'SHA256'),
 
+    # RFC8446 - TLS 1.3
+    CipherSuite(0x1301, '', '-', 'AES_128', 'GCM', 'SHA256', 'TLS_AES_128_GCM_SHA256' ),
+    CipherSuite(0x1302, '', '-', 'AES_256', 'GCM', 'SHA256', 'TLS_AES_256_GCM_SHA384'),
+    CipherSuite(0x1303, '', '-', 'CHACHA20', 'POLY1305', 'SHA256', 'TLS_CHACHA20_POLY1305_SHA256'),
+    CipherSuite(0x1304, '', '-', 'AES_128', 'CCM', 'SHA256', 'TLS_AES_128_CCM_SHA256'),
+    CipherSuite(0x1305, '', '-', 'AES_128', 'CCM_8', 'SHA256', 'TLS_AES_128_CCM_8_SHA256'),
+
+    # RFC-ietf-tls-frease-04
+    CipherSuite(0x0a0a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x1a1a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x2a2a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x3a3a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x4a4a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x5a5a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x6a6a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x7a7a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x8a8a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0x9a9a, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0xaaaa, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0xbaba, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0xcaca, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0xdada, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0xeaea, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+    CipherSuite(0xfafa, 'GREASE','       ', '        ', '        ', '      ', 'TLS_GREASE'),
+
     # RFC4492
     CipherSuite(0xc001, 'ECDH ', 'ECDSA  ', 'NULL    ', '    ', 'SHA'),
     CipherSuite(0xc002, 'ECDH ', 'ECDSA  ', 'RC4_128 ', '    ', 'SHA'),
