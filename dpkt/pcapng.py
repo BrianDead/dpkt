@@ -589,8 +589,9 @@ class Reader(object):
     def readpkts(self):
         return list(self)
 
-    def next(self):
+    def __next__(self):
         return next(self.__iter)
+    next = __next__  # Python 2 compat
 
     def dispatch(self, cnt, callback, *args):
         """Collect and process packets with a user callback.
@@ -938,6 +939,7 @@ def test_writepkts():
 
     writer.writepkts(pkts)
     return pkts
+
 
 if __name__ == '__main__':
     # TODO: big endian unit tests; could not find any examples..
